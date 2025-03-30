@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>my-project – SF Crime Story</title>
+<title>San Francisco Crime Data Story – SF Crime Story</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -82,7 +82,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">my-project</h1>
+<h1 class="title">San Francisco Crime Data Story</h1>
 </div>
 
 
@@ -99,9 +99,20 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="quarto" class="level2">
-<h2 class="anchored" data-anchor-id="quarto">Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <a href="https://quarto.org" class="uri">https://quarto.org</a>.</p>
+<section id="crime-in-san-francisco" class="level1">
+<h1>Crime in San Francisco</h1>
+<p>This is a data-driven look at crime in San Francisco using police department reports from 2003 to the present.</p>
+<hr>
+</section>
+<section id="crime-trends-over-time" class="level1">
+<h1>Crime Trends Over Time</h1>
+<p>import pandas as pd import matplotlib.pyplot as plt</p>
+<p>file1 = r”C:_Department_Incident_Reports__Historical_2003_to_May_2018.csv” file2 = r”C:_Department_Incident_Reports__2018_to_Present_20250204.csv”</p>
+<p>df1 = pd.read_csv(file1) df2 = pd.read_csv(file2) df = pd.concat([df1, df2], ignore_index=True)</p>
+<p>if ‘Incident Category’ in df.columns: df = df[df[‘Incident Category’] != ‘Prostitution’]</p>
+<p>df[‘Date’] = pd.to_datetime(df[‘Incident Date’], errors=‘coerce’) df = df.dropna(subset=[‘Date’]) df[‘Year’] = df[‘Date’].dt.year</p>
+<p>yearly = df.groupby(‘Year’).size()</p>
+<p>plt.figure(figsize=(10, 4)) yearly.plot(kind=‘bar’, color=‘royalblue’) plt.title(“San Francisco Police Reports per Year”) plt.ylabel(“Number of Incidents”) plt.xlabel(“Year”) plt.tight_layout() plt.show()</p>
 
 
 </section>
@@ -197,7 +208,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/s224369\.github\.io\/social2\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

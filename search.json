@@ -2,15 +2,8 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "my-project",
+    "title": "San Francisco Crime Data Story",
     "section": "",
-    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
-  },
-  {
-    "objectID": "index.html#quarto",
-    "href": "index.html#quarto",
-    "title": "my-project",
-    "section": "",
-    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+    "text": "Crime in San Francisco\nThis is a data-driven look at crime in San Francisco using police department reports from 2003 to the present.\n\n\n\nCrime Trends Over Time\nimport pandas as pd import matplotlib.pyplot as plt\nfile1 = r”C:_Department_Incident_Reports__Historical_2003_to_May_2018.csv” file2 = r”C:_Department_Incident_Reports__2018_to_Present_20250204.csv”\ndf1 = pd.read_csv(file1) df2 = pd.read_csv(file2) df = pd.concat([df1, df2], ignore_index=True)\nif ‘Incident Category’ in df.columns: df = df[df[‘Incident Category’] != ‘Prostitution’]\ndf[‘Date’] = pd.to_datetime(df[‘Incident Date’], errors=‘coerce’) df = df.dropna(subset=[‘Date’]) df[‘Year’] = df[‘Date’].dt.year\nyearly = df.groupby(‘Year’).size()\nplt.figure(figsize=(10, 4)) yearly.plot(kind=‘bar’, color=‘royalblue’) plt.title(“San Francisco Police Reports per Year”) plt.ylabel(“Number of Incidents”) plt.xlabel(“Year”) plt.tight_layout() plt.show()"
   }
 ]
