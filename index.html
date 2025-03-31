@@ -143,7 +143,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="crime-trends-over-time" class="level1">
 <h1>Crime Trends Over Time</h1>
-<div id="7d235811" class="cell" data-execution_count="1">
+<div id="bd3258bc" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -182,12 +182,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="visualization-2-map-based-visualization" class="level1">
 <h1>Visualization 2: Map-Based Visualization</h1>
-<div id="fdbdff04" class="cell" data-execution_count="2">
+</section>
+<section id="visualization-2-animated-heatmap-of-drugnarcotic-incidents" class="level1">
+<h1>Visualization 2: Animated Heatmap of Drug/Narcotic Incidents</h1>
+<div id="b06377ba" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> folium</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> folium.plugins <span class="im">import</span> MarkerCluster</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> folium.plugins <span class="im">import</span> HeatMapWithTime</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> IFrame</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Load merged dataset</span></span>
@@ -197,39 +200,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>category_col <span class="op">=</span> <span class="st">'Incident Category'</span> <span class="cf">if</span> <span class="st">'Incident Category'</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="st">'Category'</span></span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df[df[category_col].<span class="bu">str</span>.upper().<span class="bu">str</span>.contains(<span class="st">"DRUG|NARCOTIC"</span>, na<span class="op">=</span><span class="va">False</span>)]</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: Filter by year to narrow data</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df[(df[<span class="st">'Year'</span>] <span class="op">&gt;=</span> <span class="dv">2003</span>) <span class="op">&amp;</span> (df[<span class="st">'Year'</span>] <span class="op">&lt;=</span> <span class="dv">2024</span>)]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop rows without valid coordinates</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.dropna(subset<span class="op">=</span>[<span class="st">'Latitude'</span>, <span class="st">'Longitude'</span>])</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop rows without valid coordinates</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.dropna(subset<span class="op">=</span>[<span class="st">'Latitude'</span>, <span class="st">'Longitude'</span>])</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># ⚠️ Limit to 300 points to reduce map size</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.sample(n<span class="op">=</span><span class="dv">300</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Create datetime column from Year, Month</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure Month and Year are numeric and clean</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'Month'</span>] <span class="op">=</span> pd.to_numeric(df[<span class="st">'Month'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'Year'</span>] <span class="op">=</span> pd.to_numeric(df[<span class="st">'Year'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.dropna(subset<span class="op">=</span>[<span class="st">'Month'</span>, <span class="st">'Year'</span>])</span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Create base map</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>sf_map <span class="op">=</span> folium.Map(location<span class="op">=</span>[<span class="fl">37.7749</span>, <span class="op">-</span><span class="fl">122.4194</span>], zoom_start<span class="op">=</span><span class="dv">12</span>)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Add marker cluster</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>marker_cluster <span class="op">=</span> MarkerCluster().add_to(sf_map)</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _, row <span class="kw">in</span> df.iterrows():</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    folium.Marker(</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        location<span class="op">=</span>[row[<span class="st">'Latitude'</span>], row[<span class="st">'Longitude'</span>]],</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        popup<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>row[<span class="st">'Year'</span>]<span class="sc">}</span><span class="ss"> - </span><span class="sc">{</span>row[category_col]<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    ).add_to(marker_cluster)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Save to HTML file</span></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>sf_map.save(<span class="st">"drug_map.html"</span>)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to integers (after dropping bad values)</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'Month'</span>] <span class="op">=</span> df[<span class="st">'Month'</span>].astype(<span class="bu">int</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'Year'</span>] <span class="op">=</span> df[<span class="st">'Year'</span>].astype(<span class="bu">int</span>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'Date'</span>] <span class="op">=</span> pd.to_datetime(df[[<span class="st">'Year'</span>, <span class="st">'Month'</span>]].assign(Day<span class="op">=</span><span class="dv">1</span>), errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.dropna(subset<span class="op">=</span>[<span class="st">'Date'</span>])</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Group data by month</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'MonthStr'</span>] <span class="op">=</span> df[<span class="st">'Date'</span>].dt.to_period(<span class="st">'M'</span>).astype(<span class="bu">str</span>)</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>month_groups <span class="op">=</span> df.groupby(<span class="st">'MonthStr'</span>)</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare data for HeatMapWithTime</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>time_index <span class="op">=</span> <span class="bu">sorted</span>(month_groups.groups.keys())</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>heatmap_data <span class="op">=</span> [month_groups.get_group(month)[[<span class="st">'Latitude'</span>, <span class="st">'Longitude'</span>]].values.tolist() <span class="cf">for</span> month <span class="kw">in</span> time_index]</span>
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Show in Quarto preview</span></span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>IFrame(<span class="st">"drug_map.html"</span>, width<span class="op">=</span><span class="st">"100%"</span>, height<span class="op">=</span><span class="dv">500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Create base map</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>m <span class="op">=</span> folium.Map(location<span class="op">=</span>[<span class="fl">37.7749</span>, <span class="op">-</span><span class="fl">122.4194</span>], zoom_start<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Add animated heatmap</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>HeatMapWithTime(</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>heatmap_data,</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    index<span class="op">=</span>time_index,</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    radius<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    auto_play<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    max_opacity<span class="op">=</span><span class="fl">0.8</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>).add_to(m)</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Save to HTML</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>m.save(<span class="st">"drug_heatmap.html"</span>)</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Display in Quarto</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>IFrame(<span class="st">"drug_heatmap.html"</span>, width<span class="op">=</span><span class="st">"100%"</span>, height<span class="op">=</span><span class="dv">500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div class="cell-output cell-output-display" data-execution_count="6">
 
-        <iframe width="100%" height="500" src="drug_map.html" frameborder="0" allowfullscreen=""></iframe>
+        <iframe width="100%" height="500" src="drug_heatmap.html" frameborder="0" allowfullscreen=""></iframe>
         
 </div>
 </div>
+<p><strong>Figure 2.</strong> <em>Animated heatmap of Drug/Narcotic incidents in San Francisco from 2003 to 2024. Each frame shows the distribution of incidents for one month.</em></p>
 <hr>
 </section>
 <section id="explore-interactively" class="level1">
